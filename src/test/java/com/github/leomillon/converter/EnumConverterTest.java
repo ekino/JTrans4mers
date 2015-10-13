@@ -164,7 +164,7 @@ public class EnumConverterTest {
 
         // When
         Optional<B> result = to(B.class)
-                .withMatcher(EnumConverter.Matchers.byEquals())
+                .withMatcher(EnumConverter.Matchers.toNameByEquals())
                 .convert("COMMON_VALUE");
 
         // Then
@@ -177,7 +177,7 @@ public class EnumConverterTest {
 
         // When
         Optional<B> result = to(B.class)
-                .withMatcher(EnumConverter.Matchers.byEquals())
+                .withMatcher(EnumConverter.Matchers.toNameByEquals())
                 .convert("common_value");
 
         // Then
@@ -185,17 +185,17 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void use_with_fallback_on_custom_matcher() {
+    public void use_with_custom_matcher() {
 
         // Given
-        BiPredicate<String, B> customMatcher = EnumConverter
-                .<B>defaultMatcher()
-                .or((source, target) -> "A_VALUE".equals(source) && target == B.B_VALUE);
+        BiPredicate<A, B> customMatcher = EnumConverter
+                .<A, B>defaultMatcher()
+                .or((source, target) -> source == A.A_VALUE && target == B.B_VALUE);
 
         // When
         List<B> result = asList(A.COMMON_VALUE, A.A_VALUE)
                 .stream()
-                .map(to(B.class).withMatcher(customMatcher))
+                .map(to(B.class, customMatcher))
                 .collect(toList());
 
         // Then
