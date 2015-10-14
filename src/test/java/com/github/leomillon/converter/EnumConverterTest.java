@@ -1,6 +1,6 @@
 package com.github.leomillon.converter;
 
-import com.github.leomillon.converter.EnumConverter.Matchers;
+import com.github.leomillon.converter.EnumConverter.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiPredicate;
+import java.util.function.Function;
 
-import static com.github.leomillon.converter.EnumConverter.to;
+import static com.github.leomillon.converter.EnumConverter.*;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
@@ -180,9 +180,7 @@ public class EnumConverterTest {
     public void should_pass_with_equals_custom_matcher_because_of_upper_cased_string_input() {
 
         // When
-        Optional<B> result = to(B.class)
-                .withMatcher(Matchers.toNameByEquals())
-                .convert("COMMON_VALUE");
+        Optional<B> result = convert("COMMON_VALUE", Transformers.toNameByEquals(B.class));
 
         // Then
         assertThat(result).isPresent();
@@ -193,9 +191,7 @@ public class EnumConverterTest {
     public void should_fail_with_equals_custom_matcher_because_of_lower_cased_string_input() {
 
         // When
-        Optional<B> result = to(B.class)
-                .withMatcher(Matchers.toNameByEquals())
-                .convert("common_value");
+        Optional<B> result = convert("common_value", Transformers.toNameByEquals(B.class));
 
         // Then
         assertThat(result).isEmpty();
@@ -204,15 +200,11 @@ public class EnumConverterTest {
     @Test
     public void use_as_a_function_for_stream_map_with_custom_matcher() {
 
-        // Given
-        BiPredicate<A, B> customMatcher = EnumConverter
-                .<A, B>defaultMatcher()
-                .or((source, target) -> source == A.A_VALUE && target == B.B_VALUE);
-
         // When
         List<B> result = asList(A.COMMON_VALUE, A.A_VALUE)
                 .stream()
-                .map(to(B.class, customMatcher))
+                .map(EnumConverter.<A, B>to(B.class)
+                        .withFallback(source -> source == A.A_VALUE ? B.B_VALUE : null))
                 .collect(toList());
 
         // Then
@@ -222,11 +214,8 @@ public class EnumConverterTest {
     @Test(dataProvider = "explicit_enum_mapping_provider")
     public void should_pass_with_explicit_enum_mapping_matcher(A input, Optional<B> expectedResult) {
 
-        // Given
-        BiPredicate<A, B> matcher = Matchers.byExplicitMapping(EXPLICIT_ENUM_MAPPING);
-
         // When
-        Optional<B> result = to(B.class, matcher).convert(input);
+        Optional<B> result = with(Transformers.byExplicitMapping(EXPLICIT_ENUM_MAPPING)).convert(input);
 
         // Then
         assertThat(result).isEqualTo(expectedResult);
@@ -245,11 +234,8 @@ public class EnumConverterTest {
     @Test(dataProvider = "explicit_string_mapping_provider")
     public void should_pass_with_explicit_string_mapping_matcher(String input, Optional<B> expectedResult) {
 
-        // Given
-        BiPredicate<String, B> matcher = Matchers.byExplicitMapping(EXPLICIT_STRING_MAPPING);
-
         // When
-        Optional<B> result = to(B.class, matcher).convert(input);
+        Optional<B> result = with(Transformers.byExplicitMapping(EXPLICIT_STRING_MAPPING)).convert(input);
 
         // Then
         assertThat(result).isEqualTo(expectedResult);
@@ -263,5 +249,50 @@ public class EnumConverterTest {
                 { "A_VALUE", of(B.B_VALUE) },
                 { null, empty() }
         };
+    }
+
+    @Test(dataProvider = "fallbacks_mapping_provider")
+    public void should_pass_with_default_transformer_and_multiple_fallbacks(String input, Optional<B> expectedResult) {
+
+        List<Function<String, B>> fallbacks = asList(
+                Transformers.byExplicitMapping(EXPLICIT_STRING_MAPPING),
+                source -> "B".equalsIgnoreCase(source) ? B.B_VALUE : null
+        );
+
+        // When
+        Optional<B> result = EnumConverter.<String, B>to(B.class)
+                .withFallbacks(fallbacks)
+                .convert(input);
+
+        // Then
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    @DataProvider
+    private Object[][] fallbacks_mapping_provider() {
+        return new Object[][] {
+                // String input, Optional<B> expectedResult
+                { "COMMON_VALUE", of(B.COMMON_VALUE) },
+                { "A_VALUE", of(B.B_VALUE) },
+                { "B", of(B.B_VALUE) },
+                { "UNKOWN_VALUE", empty() },
+                { null, empty() }
+        };
+    }
+
+    @Test
+    public void should_match_with_first_non_null_transformer() {
+
+        // When
+        Optional<B> result = EnumConverter
+                .<A, B>with(asList(
+                        source -> source == A.A_VALUE ? B.B_VALUE : null,
+                        source -> source == A.A_VALUE ? B.COMMON_VALUE : null
+                ))
+                .convert(A.A_VALUE);
+
+        // Then
+        assertThat(result).isPresent();
+        assertThat(result.get()).isEqualTo(B.B_VALUE);
     }
 }

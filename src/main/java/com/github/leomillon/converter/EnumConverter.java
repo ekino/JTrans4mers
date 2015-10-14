@@ -1,27 +1,40 @@
 package com.github.leomillon.converter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 
 public class EnumConverter<I, O extends Enum<O>> implements Function<I, O> {
 
-    private final Class<O> targetClass;
+    private final List<Function<I, O>> transformers;
 
-    private BiPredicate<I, O> matcher = defaultMatcher();
+    private List<Function<I, O>> fallbacks = emptyList();
 
-    public EnumConverter(Class<O> targetClass) {
-        this.targetClass = requireNonNull(targetClass, "A target class must be defined");
+    private EnumConverter(List<Function<I, O>> transformers) {
+        this.transformers = requireNonNull(transformers, "The transformers must be defined");
     }
 
-    public EnumConverter<I, O> withMatcher(BiPredicate<I, O> newMatcher) {
-        this.matcher = requireNonNull(newMatcher, "The matcher must be defined");
+    public EnumConverter(Class<O> targetClass) {
+        this(singletonList(defaultTransformer(targetClass)));
+    }
+
+    public EnumConverter<I, O> withFallback(Function<I, O> fallbackToApply) {
+        withFallbacks(singletonList(requireNonNull(fallbackToApply, "The fallback must be defined")));
+        return this;
+    }
+
+    public EnumConverter<I, O> withFallbacks(List<Function<I, O>> fallbacksToApply) {
+        this.fallbacks = requireNonNull(fallbacksToApply, "The fallbacks must be defined");
         return this;
     }
 
@@ -31,61 +44,102 @@ public class EnumConverter<I, O extends Enum<O>> implements Function<I, O> {
 
     @Override
     public O apply(I input) {
-        if (input == null) {
-            return null;
-        }
-
-        return convert(input, matcher).orElse(null);
+        return convert(input, computeFunctions()).orElse(null);
     }
 
-    private Optional<O> convert(I input, BiPredicate<I, O> matcherToApply) {
+    private Iterable<Function<I, O>> computeFunctions() {
+        Collection<Function<I, O>> functionsToApply = new ArrayList<>(transformers);
+        functionsToApply.addAll(fallbacks);
+        return functionsToApply;
+    }
 
-        return ofNullable(input).map(toTargetEnum(targetClass, matcherToApply));
+    private Optional<O> convert(I input, Iterable<Function<I, O>> transformersToApply) {
+
+        return ofNullable(toTargetEnum(transformersToApply).apply(input));
+    }
+
+    private static <S, T extends Enum<T>> Function<S, T> toTargetEnum(Iterable<Function<S, T>> transformers) {
+        return source -> {
+            for (Function<S, T> transformer : transformers) {
+                T result = transformer.apply(source);
+                if (result != null) {
+                    return result;
+                }
+            }
+            return null;
+        };
     }
 
     public static <S, T extends Enum<T>> EnumConverter<S, T> to(Class<T> targetClass) {
         return new EnumConverter<>(targetClass);
     }
 
-    public static <S, T extends Enum<T>> EnumConverter<S, T> to(Class<T> targetClass, BiPredicate<S, T> matcherToApply) {
-        return new EnumConverter<S, T>(targetClass).withMatcher(matcherToApply);
+    public static <S, T extends Enum<T>> EnumConverter<S, T> with(Function<S, T> transformer) {
+        return new EnumConverter<>(singletonList(requireNonNull(transformer, "The transformer must be defined")));
+    }
+
+    public static <S, T extends Enum<T>> EnumConverter<S, T> with(List<Function<S, T>> transformers) {
+        return new EnumConverter<>(transformers);
     }
 
     public static <S, T extends Enum<T>> Optional<T> convert(S input, Class<T> targetClass) {
         return new EnumConverter<>(targetClass).convert(input);
     }
 
-    private static <S, T extends Enum<T>> Function<S, T> toTargetEnum(Class<T> targetClazz, BiPredicate<S, T> matcher) {
-        return source -> Arrays.stream(targetClazz.getEnumConstants())
-                .filter(Objects::nonNull)
-                .filter(enumValue -> matcher.test(source, enumValue))
-                .findFirst()
-                .orElse(null);
+    public static <S, T extends Enum<T>> Optional<T> convert(S input, List<Function<S, T>> transformers) {
+        return new EnumConverter<>(transformers).convert(input);
     }
 
-    public static <S, T extends Enum<T>> BiPredicate<S, T> defaultMatcher() {
-        return Matchers.<S, T>toNameByEqualsIgnoreCase();
+    public static <S, T extends Enum<T>> Optional<T> convert(S input, Function<S, T> transformer) {
+        return convert(input, singletonList(transformer));
     }
 
-    public static final class Matchers {
+    public static <S, T extends Enum<T>> Function<S, T> defaultTransformer(Class<T> targetClass) {
+        return Transformers.toNameByEqualsIgnoreCase(targetClass);
+    }
 
-        public static <S, T extends Enum<T>> BiPredicate<S, T> toNameByEquals() {
-            return (source, target) -> source.equals(target.name());
+    public static final class Transformers {
+
+        private Transformers() {
+            // Prevent instanciation
         }
 
-        public static <S, T extends Enum<T>> BiPredicate<S, T> toNameByEqualsIgnoreCase() {
-            return (source, target) -> ofNullable(source)
-                    .map(obj -> obj.getClass().isEnum() ? ((Enum) source).name() : source.toString())
-                    .filter(stringSource -> stringSource.equalsIgnoreCase(target.name()))
-                    .isPresent();
+        private static String getTargetName(Object obj) {
+            if (obj == null) {
+                return null;
+            }
+            return obj.getClass().isEnum() ? ((Enum) obj).name() : obj.toString();
         }
 
-        public static <S, T extends Enum<T>> BiPredicate<S, T> byExplicitMapping(Map<S, T> explicitMapping) {
-            requireNonNull(explicitMapping, "The explicit mapping must be defined");
-            return (source, target) -> ofNullable(source)
+        private static <T extends Enum<T>> Function<Class<T>, T> firstMatching(Predicate<String> matcher) {
+            return enumClass -> Arrays.stream(enumClass.getEnumConstants())
+                    .filter(enumValue -> matcher.test(enumValue.name()))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        public static <S, T extends Enum<T>> Function<S, T> toNameByEquals(Class<T> targetClass) {
+            return source -> ofNullable(source)
+                    .map(Transformers::getTargetName)
+                    .map(targetName -> ofNullable(targetClass)
+                            .map(firstMatching(targetName::equals))
+                            .orElse(null))
+                    .orElse(null);
+        }
+
+        public static <S, T extends Enum<T>> Function<S, T> toNameByEqualsIgnoreCase(Class<T> targetClass) {
+            return source -> ofNullable(source)
+                    .map(Transformers::getTargetName)
+                    .map(targetName -> ofNullable(targetClass)
+                            .map(firstMatching(targetName::equalsIgnoreCase))
+                            .orElse(null))
+                    .orElse(null);
+        }
+
+        public static <S, T extends Enum<T>> Function<S, T> byExplicitMapping(Map<S, T> explicitMapping) {
+            return source -> ofNullable(source)
                     .map(explicitMapping::get)
-                    .filter(target::equals)
-                    .isPresent();
+                    .orElse(null);
         }
     }
 }
