@@ -1,6 +1,7 @@
 package com.github.leomillon.converter;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
@@ -76,6 +77,14 @@ public class EnumConverter<I, O extends Enum<O>> implements Function<I, O> {
             return (source, target) -> ofNullable(source)
                     .map(obj -> obj.getClass().isEnum() ? ((Enum) source).name() : source.toString())
                     .filter(stringSource -> stringSource.equalsIgnoreCase(target.name()))
+                    .isPresent();
+        }
+
+        public static <S, T extends Enum<T>> BiPredicate<S, T> byExplicitMapping(Map<S, T> explicitMapping) {
+            requireNonNull(explicitMapping, "The explicit mapping must be defined");
+            return (source, target) -> ofNullable(source)
+                    .map(explicitMapping::get)
+                    .filter(target::equals)
                     .isPresent();
         }
     }

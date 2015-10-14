@@ -1,17 +1,34 @@
 package com.github.leomillon.converter;
 
+import com.github.leomillon.converter.EnumConverter.Matchers;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 
 import static com.github.leomillon.converter.EnumConverter.to;
 import static java.util.Arrays.asList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class EnumConverterTest {
+
+    public static final Map<A, B> EXPLICIT_ENUM_MAPPING = new HashMap<>();
+    public static final Map<String, B> EXPLICIT_STRING_MAPPING = new HashMap<>();
+
+    static {
+        EXPLICIT_ENUM_MAPPING.put(A.COMMON_VALUE, B.COMMON_VALUE);
+        EXPLICIT_ENUM_MAPPING.put(A.A_VALUE, B.B_VALUE);
+
+        EXPLICIT_STRING_MAPPING.put("COMMON_VALUE", B.COMMON_VALUE);
+        EXPLICIT_STRING_MAPPING.put("A_VALUE", B.B_VALUE);
+    }
 
     private enum A {
         COMMON_VALUE,
@@ -138,7 +155,7 @@ public class EnumConverterTest {
     public void use_as_a_function_for_optinal_map() {
 
         // When
-        Optional<B> result = Optional.of(A.COMMON_VALUE)
+        Optional<B> result = of(A.COMMON_VALUE)
                 .map(to(B.class));
 
         // Then
@@ -164,7 +181,7 @@ public class EnumConverterTest {
 
         // When
         Optional<B> result = to(B.class)
-                .withMatcher(EnumConverter.Matchers.toNameByEquals())
+                .withMatcher(Matchers.toNameByEquals())
                 .convert("COMMON_VALUE");
 
         // Then
@@ -177,7 +194,7 @@ public class EnumConverterTest {
 
         // When
         Optional<B> result = to(B.class)
-                .withMatcher(EnumConverter.Matchers.toNameByEquals())
+                .withMatcher(Matchers.toNameByEquals())
                 .convert("common_value");
 
         // Then
@@ -185,7 +202,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void use_with_custom_matcher() {
+    public void use_as_a_function_for_stream_map_with_custom_matcher() {
 
         // Given
         BiPredicate<A, B> customMatcher = EnumConverter
@@ -200,5 +217,51 @@ public class EnumConverterTest {
 
         // Then
         assertThat(result).containsExactly(B.COMMON_VALUE, B.B_VALUE);
+    }
+
+    @Test(dataProvider = "explicit_enum_mapping_provider")
+    public void should_pass_with_explicit_enum_mapping_matcher(A input, Optional<B> expectedResult) {
+
+        // Given
+        BiPredicate<A, B> matcher = Matchers.byExplicitMapping(EXPLICIT_ENUM_MAPPING);
+
+        // When
+        Optional<B> result = to(B.class, matcher).convert(input);
+
+        // Then
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    @DataProvider
+    private Object[][] explicit_enum_mapping_provider() {
+        return new Object[][] {
+                // A input, Optional<B> expectedResult
+                { A.COMMON_VALUE, of(B.COMMON_VALUE) },
+                { A.A_VALUE, of(B.B_VALUE) },
+                { null, empty() }
+        };
+    }
+
+    @Test(dataProvider = "explicit_string_mapping_provider")
+    public void should_pass_with_explicit_string_mapping_matcher(String input, Optional<B> expectedResult) {
+
+        // Given
+        BiPredicate<String, B> matcher = Matchers.byExplicitMapping(EXPLICIT_STRING_MAPPING);
+
+        // When
+        Optional<B> result = to(B.class, matcher).convert(input);
+
+        // Then
+        assertThat(result).isEqualTo(expectedResult);
+    }
+
+    @DataProvider
+    private Object[][] explicit_string_mapping_provider() {
+        return new Object[][] {
+                // String input, Optional<B> expectedResult
+                { "COMMON_VALUE", of(B.COMMON_VALUE) },
+                { "A_VALUE", of(B.B_VALUE) },
+                { null, empty() }
+        };
     }
 }
