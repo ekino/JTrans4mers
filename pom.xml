@@ -42,7 +42,7 @@
     <scm>
         <connection>scm:git:https://github.com/ekino/JTrans4mers.git</connection>
         <developerConnection>scm:git:git@github.com:ekino/JTrans4mers.git</developerConnection>
-        <url>hhttps://github.com/ekino/JTrans4mers</url>
+        <url>git@github.com:ekino/JTrans4mers.git</url>
     </scm>
 
     <properties>
