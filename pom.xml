@@ -8,6 +8,13 @@
     <version>1.0-SNAPSHOT</version>
     <name>enum-converter</name>
 
+    <licenses>
+        <license>
+            <name>MIT License (MIT)</name>
+            <url>http://opensource.org/licenses/mit-license</url>
+        </license>
+    </licenses>
+
     <properties>
         <jdk.version>1.8</jdk.version>
     </properties>
