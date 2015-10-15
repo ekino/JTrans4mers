@@ -82,7 +82,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void should_return_empty_when_to_string_value_does_not_exist_in_the_two_enums() {
+    public void should_return_empty_when_an_input_does_not_exist_in_the_target_enum() {
 
         // When
         Optional<B> result = to(B.class).convert(A.A_VALUE);
@@ -142,7 +142,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void static_should_return_empty_when_to_string_value_does_not_exist_in_the_two_enums() {
+    public void static_should_return_empty_when_an_input_does_not_exist_in_the_target_enum() {
 
         // When
         Optional<B> result = EnumConverter.convert(A.A_VALUE, B.class);
@@ -152,7 +152,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void use_as_a_function_for_optinal_map() {
+    public void use_as_a_function_for_optional_map() {
 
         // When
         Optional<B> result = of(A.COMMON_VALUE)
@@ -177,7 +177,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void should_pass_with_equals_custom_matcher_because_of_upper_cased_string_input() {
+    public void should_pass_with_equals_transformer_because_of_upper_cased_string_input() {
 
         // When
         Optional<B> result = convert("COMMON_VALUE", Transformers.toNameByEquals(B.class));
@@ -188,7 +188,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void should_fail_with_equals_custom_matcher_because_of_lower_cased_string_input() {
+    public void should_fail_with_equals_transformer_because_of_lower_cased_string_input() {
 
         // When
         Optional<B> result = convert("common_value", Transformers.toNameByEquals(B.class));
@@ -198,7 +198,7 @@ public class EnumConverterTest {
     }
 
     @Test
-    public void use_as_a_function_for_stream_map_with_custom_matcher() {
+    public void use_as_a_function_for_stream_map_with_a_fallback() {
 
         // When
         List<B> result = asList(A.COMMON_VALUE, A.A_VALUE)
@@ -212,7 +212,7 @@ public class EnumConverterTest {
     }
 
     @Test(dataProvider = "explicit_enum_mapping_provider")
-    public void should_pass_with_explicit_enum_mapping_matcher(A input, Optional<B> expectedResult) {
+    public void should_pass_with_explicit_enum_mapping_transformer(A input, Optional<B> expectedResult) {
 
         // When
         Optional<B> result = with(Transformers.byExplicitMapping(EXPLICIT_ENUM_MAPPING)).convert(input);
@@ -232,7 +232,7 @@ public class EnumConverterTest {
     }
 
     @Test(dataProvider = "explicit_string_mapping_provider")
-    public void should_pass_with_explicit_string_mapping_matcher(String input, Optional<B> expectedResult) {
+    public void should_pass_with_explicit_string_mapping_transformer(String input, Optional<B> expectedResult) {
 
         // When
         Optional<B> result = with(Transformers.byExplicitMapping(EXPLICIT_STRING_MAPPING)).convert(input);
