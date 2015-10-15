@@ -39,6 +39,12 @@
         <url>https://github.com/ekino/JTrans4mers/issues</url>
     </issueManagement>
 
+    <scm>
+        <connection>scm:git:https://github.com/ekino/JTrans4mers.git</connection>
+        <developerConnection>scm:git:git@github.com:ekino/JTrans4mers.git</developerConnection>
+        <url>hhttps://github.com/ekino/JTrans4mers</url>
+    </scm>
+
     <properties>
         <jdk.version>1.8</jdk.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
