@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2015 ekino (http://www.ekino.com/)
  */
-package com.github.ekino.converter;
+package com.ekino.converter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
