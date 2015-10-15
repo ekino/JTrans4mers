@@ -8,6 +8,7 @@
     <packaging>jar</packaging>
     <name>JTrans4mers</name>
     <description>A tool to easily map an Object to an Enum</description>
+    <url>https://github.com/ekino/JTrans4mers</url>
 
     <developers>
         <developer>
