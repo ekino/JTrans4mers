@@ -12,9 +12,19 @@
     <developers>
         <developer>
             <name>Léo Millon</name>
+            <roles>
+                <role>Engineer</role>
+            </roles>
+            <organization>ekino</organization>
+            <organizationUrl>http://www.ekino.com</organizationUrl>
         </developer>
     </developers>
     <inceptionYear>2015</inceptionYear>
+
+    <organization>
+        <name>ekino</name>
+        <url>http://www.ekino.com</url>
+    </organization>
 
     <licenses>
         <license>
