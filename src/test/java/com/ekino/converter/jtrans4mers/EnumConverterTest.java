@@ -180,7 +180,7 @@ public class EnumConverterTest {
     public void should_pass_with_equals_transformer_because_of_upper_cased_string_input() {
 
         // When
-        Optional<B> result = convert("COMMON_VALUE", Transformers.toNameByEquals(B.class));
+        Optional<B> result = convert("COMMON_VALUE", Transformers.byEqualNames(B.class));
 
         // Then
         assertThat(result).isPresent();
@@ -191,7 +191,7 @@ public class EnumConverterTest {
     public void should_fail_with_equals_transformer_because_of_lower_cased_string_input() {
 
         // When
-        Optional<B> result = convert("common_value", Transformers.toNameByEquals(B.class));
+        Optional<B> result = convert("common_value", Transformers.byEqualNames(B.class));
 
         // Then
         assertThat(result).isEmpty();

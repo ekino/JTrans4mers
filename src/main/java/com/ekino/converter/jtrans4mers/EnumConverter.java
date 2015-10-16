@@ -9,8 +9,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -98,7 +98,7 @@ public class EnumConverter<I, O extends Enum<O>> implements Function<I, O> {
     }
 
     public static <S, T extends Enum<T>> Function<S, T> defaultTransformer(Class<T> targetClass) {
-        return Transformers.toNameByEqualsIgnoreCase(targetClass);
+        return Transformers.byEqualNamesIgnoringCase(targetClass);
     }
 
     public static final class Transformers {
@@ -107,36 +107,59 @@ public class EnumConverter<I, O extends Enum<O>> implements Function<I, O> {
             // Prevent instanciation
         }
 
-        private static String getTargetName(Object obj) {
+        private static String getSourceName(Object obj) {
             if (obj == null) {
                 return null;
             }
             return obj.getClass().isEnum() ? ((Enum) obj).name() : obj.toString();
         }
 
-        private static <T extends Enum<T>> Function<Class<T>, T> firstMatching(Predicate<String> matcher) {
-            return enumClass -> Arrays.stream(enumClass.getEnumConstants())
-                    .filter(enumValue -> matcher.test(enumValue.name()))
-                    .findFirst()
-                    .orElse(null);
+        private static class FirstMatchingAgainstEnumValues<S, T extends Enum<T>> implements Function<S, T> {
+
+            private final Class<T> targetClass;
+            private final BiPredicate<String, String> matcher;
+
+            public FirstMatchingAgainstEnumValues(Class<T> targetClass, BiPredicate<String, String> matcher) {
+                this.targetClass = requireNonNull(targetClass);
+                this.matcher = requireNonNull(matcher);
+            }
+
+            @Override
+            public T apply(S source) {
+                return ofNullable(source)
+                        .map(Transformers::getSourceName)
+                        .map(sourceName -> ofNullable(targetClass)
+                                .map(firstMatching(sourceName, matcher))
+                                .orElse(null))
+                        .orElse(null);
+            }
+
+
+            private Function<Class<T>, T> firstMatching(String source, BiPredicate<String, String> enumMatcher) {
+                return enumClass -> Arrays.stream(enumClass.getEnumConstants())
+                        .filter(enumValue -> enumMatcher.test(source, enumValue.name()))
+                        .findFirst()
+                        .orElse(null);
+            }
         }
 
-        public static <S, T extends Enum<T>> Function<S, T> toNameByEquals(Class<T> targetClass) {
-            return source -> ofNullable(source)
-                    .map(Transformers::getTargetName)
-                    .map(targetName -> ofNullable(targetClass)
-                            .map(firstMatching(targetName::equals))
-                            .orElse(null))
-                    .orElse(null);
+        public static <S, T extends Enum<T>> Function<S, T> firstMatchingAgainstEnumValues(Class<T> targetClass,
+                                                                                           BiPredicate<String, String> matcher) {
+            return new FirstMatchingAgainstEnumValues<>(targetClass, matcher);
         }
 
-        public static <S, T extends Enum<T>> Function<S, T> toNameByEqualsIgnoreCase(Class<T> targetClass) {
-            return source -> ofNullable(source)
-                    .map(Transformers::getTargetName)
-                    .map(targetName -> ofNullable(targetClass)
-                            .map(firstMatching(targetName::equalsIgnoreCase))
-                            .orElse(null))
-                    .orElse(null);
+        public static <S, T extends Enum<T>> Function<S, T> byEqualNames(Class<T> targetClass) {
+            return firstMatchingAgainstEnumValues(
+                    targetClass,
+                    (sourceName, targetName) -> targetName.equals(sourceName)
+            );
+        }
+
+        public static <S, T extends Enum<T>> Function<S, T> byEqualNamesIgnoringCase(Class<T> targetClass) {
+            return firstMatchingAgainstEnumValues(
+                    targetClass,
+                    (sourceName, targetName) -> targetName.equalsIgnoreCase(sourceName)
+            );
         }
 
         public static <S, T extends Enum<T>> Function<S, T> byExplicitMapping(Map<S, T> explicitMapping) {
