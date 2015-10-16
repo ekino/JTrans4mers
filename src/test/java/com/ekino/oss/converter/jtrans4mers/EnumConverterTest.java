@@ -1,6 +1,6 @@
-package com.ekino.converter.jtrans4mers;
+package com.ekino.oss.converter.jtrans4mers;
 
-import com.ekino.converter.jtrans4mers.EnumConverter.*;
+import com.ekino.oss.converter.jtrans4mers.EnumConverter.*;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static com.ekino.converter.jtrans4mers.EnumConverter.*;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.*;
 import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;

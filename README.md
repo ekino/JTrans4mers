@@ -14,7 +14,7 @@ Requires JDK 1.8 or higher.
 To add a dependency on JTrans4mers using Maven, use the following:
 ```xml
 <dependency>
-  <groupId>com.ekino.converter</groupId>
+  <groupId>com.ekino.oss.converter</groupId>
   <artifactId>jtrans4mers</artifactId>
   <version>1.0-SNAPSHOT</version>
 </dependency>
@@ -47,12 +47,12 @@ Optional<B> result = EnumConverter.convert(A.A_VALUE, B.class); // result : empt
 
 You can also use the fluent way :
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Optional<B> result = to(B.class).convert(A.COMMON_VALUE); // result.get() : B.COMMON_VALUE
 ````
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Optional<B> result = to(B.class).convert(A.A_VALUE); // result : empty
 ```
@@ -64,14 +64,14 @@ This does not only apply on Enum input. An object can be used to match with the 
 
 String input
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Optional<B> result = to(B.class).convert("COMMON_VALUE"); // result.get() : B.COMMON_VALUE
 ```
 
 Object input
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Object input = new Object() {
     @Override
@@ -88,7 +88,7 @@ Null safe input
 Optional<B> result = EnumConverter.convert(null, B.class); // result : empty
 ````
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Optional<B> result = to(B.class).convert(null); // result : empty
 ```
@@ -98,7 +98,7 @@ You can apply custom transformation(s) and fallback(s). These are simple Java `F
 
 How to use a custom transformer :
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.convert;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.convert;
 
 Function<String, B> transformer = input -> "B".equals(input) ? B.B_VALUE : null;
 
@@ -114,23 +114,23 @@ List<Function<String, B>> transformers = asList(
         input -> "B".equals(input) ? B.B_VALUE : null);
 ````
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.convert;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.convert;
 
 Optional<B> result = convert("COMMON", transformers); // result.get() : B.COMMON_VALUE
 ```
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.convert;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.convert;
 
 Optional<B> result = convert("B", transformers); // result.get() : B.B_VALUE
 ```
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.convert;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.convert;
 
 Optional<B> result = convert("Other", transformers); // result : empty
 ```
 The fluent way :
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.with;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.with;
 
 Optional<B> result = with(transformers).convert("B"); // result.get() : B.B_VALUE
 ```
@@ -145,31 +145,31 @@ If you want to change the default transformation behavior, you have access at so
 - `Transformers.byEqualNamesIgnoringCase(Class<T> targetClass)` :
 The default transformer that returns the first target enum value name that **is equal ignoring case** to the input `name`/`toString` value.
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Optional<B> result = to(B.class).convert("COMMON_VALUE"); // result.get() : B.COMMON_VALUE
 ```
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 Optional<B> result = to(B.class).convert("common_value"); // result.get() : B.COMMON_VALUE
 ```
 - `Transformers.byEqualNames(Class<T> targetClass)` :
 A transformer that returns the first target enum value name that **is equal** to the input `name`/`toString` value.
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.convert;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.convert;
 
 Optional<B> result = convert("COMMON_VALUE", Transformers.byEqualNames(B.class)); // result.get() : B.COMMOM_VALUE
 ```
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.convert;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.convert;
 
 Optional<B> result = convert("common_value", Transformers.byEqualNames(B.class)); // result : empty
 ```
 - `Transformers.byExplicitMapping(Map<S, T> explicitMapping)` :
 A transformer that uses a map to get corresponding target value for a given input.
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.with;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.with;
 
 Map<A, B> mapping = new HashMap<>();
 mapping.put(A.COMMON_VALUE, B.COMMON_VALUE);
@@ -193,7 +193,7 @@ You can use the converter as a standard `java.util.function.Function`.
 
 #### For `Optional`
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 import static java.util.Optional.of;
 
 Optional<B> result = of(A.COMMON_VALUE).map(to(B.class)); // result.get() : B.COMMON_VALUE
@@ -201,7 +201,7 @@ Optional<B> result = of(A.COMMON_VALUE).map(to(B.class)); // result.get() : B.CO
 
 #### For `Stream`
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
 
@@ -214,12 +214,12 @@ List<B> result = asList(A.COMMON_VALUE, A.A_VALUE)
 #### Direct result
 If you do not want an optional as a result, you can use the fonctional interface of the `Function`:
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 B result = to(B.class).apply("COMMON_VALUE"); // result : B.COMMON_VALUE
 ```
 ```java
-import static com.ekino.converter.jtrans4mers.EnumConverter.to;
+import static com.ekino.oss.converter.jtrans4mers.EnumConverter.to;
 
 B result = to(B.class).apply("A_VALUE"); // result : null
 ```

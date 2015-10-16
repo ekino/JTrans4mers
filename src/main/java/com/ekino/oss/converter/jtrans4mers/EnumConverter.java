@@ -1,7 +1,7 @@
 /**
  * Copyright (c) 2015 ekino (http://www.ekino.com/)
  */
-package com.ekino.converter.jtrans4mers;
+package com.ekino.oss.converter.jtrans4mers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -199,7 +199,7 @@ public class EnumConverter<I, O extends Enum<O>> implements Function<I, O> {
     /**
      * The default transformer used by the converter.
      *
-     * @see com.ekino.converter.jtrans4mers.EnumConverter.Transformers#byEqualNamesIgnoringCase(Class)
+     * @see EnumConverter.Transformers#byEqualNamesIgnoringCase(Class)
      * @since 1.0
      */
     public static <S, T extends Enum<T>> Function<S, T> defaultTransformer(Class<T> targetClass) {
