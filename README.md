@@ -1,5 +1,7 @@
 # JTrans4mers
 
+[![Build Status](https://travis-ci.org/ekino/JTrans4mers.svg?branch=master)](https://travis-ci.org/ekino/JTrans4mers)
+
 A Java tool to easily map an Object to an Enum.
 
 This tool gives you the ability to convert an Object to an Enum value by applying a sequence of transformations 
