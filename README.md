@@ -16,7 +16,7 @@ To add a dependency on JTrans4mers using Maven, use the following:
 <dependency>
   <groupId>com.ekino.oss.converter</groupId>
   <artifactId>jtrans4mers</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
 </dependency>
 ```
 
